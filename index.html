@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Peminjaman Buku Perpustakaan</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ====== HALAMAN LOGIN ====== -->
+    <div id="loginSection">
+        <div class="login-card">
+            <div class="login-logo">📚</div>
+            <h1>Perpustakaan Kampus</h1>
+            <p class="login-subtitle">Sistem Peminjaman Buku</p>
+
+            <div id="loginError" class="error-msg" style="display:none;"></div>
+
+            <div class="form-group">
+                <label for="nim">NIM Mahasiswa</label>
+                <input type="text" id="nim" placeholder="Contoh: 12345">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Masukkan password Anda">
+            </div>
+
+            <button class="btn btn-primary btn-full" onclick="login()">🔓 Login</button>
+
+            <div class="demo-hint">
+                <strong>Akun Demo:</strong><br>
+                NIM: <code>12345</code> | Pass: <code>pass123</code> (Ahmad Fauzi)<br>
+                NIM: <code>67890</code> | Pass: <code>pass456</code> (Siti Rahayu)<br>
+                NIM: <code>11111</code> | Pass: <code>pass789</code> (Budi Santoso)
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== HALAMAN UTAMA ====== -->
+    <div id="mainSection" style="display:none;">
+
+        <!-- Header -->
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <h1>📚 Perpustakaan Kampus</h1>
+                <div class="service-status-bar" id="serviceStatusBar" title="Status Koneksi Microservices">
+                    <span class="service-indicator" id="statusBookService"><span class="dot-online"></span> Book Service (5001)</span>
+                    <span class="service-indicator" id="statusBorrowService"><span class="dot-online"></span> Borrowing Service (5002)</span>
+                </div>
+            </div>
+            <div class="user-info">
+                <span id="userNameDisplay"></span>
+                <button class="btn btn-danger" onclick="logout()">🔒 Logout</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+
+            <!-- Peminjaman Aktif -->
+            <section class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #edf2f7; padding-bottom: 12px;">
+                    <h2 style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">📋 Peminjaman Aktif Saya</h2>
+                    <button class="btn btn-primary btn-sm" onclick="renderAll()" title="Segarkan data dari Microservices">🔄 Refresh</button>
+                </div>
+                <div id="activeBorrowings"></div>
+            </section>
+
+            <!-- Daftar Buku -->
+            <section class="card">
+                <h2>📖 Daftar Buku Perpustakaan</h2>
+                <div id="bookList"></div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

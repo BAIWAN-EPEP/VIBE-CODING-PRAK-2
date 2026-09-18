@@ -1,0 +1,366 @@
+/* ============================================================
+   SISTEM PEMINJAMAN BUKU PERPUSTAKAAN
+   Praktikum RE dengan AI - Vanilla CSS
+   ============================================================ */
+
+/* ----- RESET & BASE ----- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f4f8;
+    color: #2d3748;
+    min-height: 100vh;
+}
+
+/* ----- HALAMAN LOGIN ----- */
+#loginSection {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #4c63b6 0%, #7c3aed 100%);
+    padding: 16px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px 36px;
+    width: 420px;
+    max-width: 100%;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+    text-align: center;
+}
+
+.login-logo {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+}
+
+.login-card h1 {
+    font-size: 1.6rem;
+    color: #2d3748;
+    margin-bottom: 4px;
+}
+
+.login-subtitle {
+    color: #718096;
+    margin-bottom: 28px;
+    font-size: 0.95rem;
+}
+
+.form-group {
+    text-align: left;
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.88rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    color: #2d3748;
+}
+
+.form-group input:focus {
+    border-color: #4c63b6;
+    box-shadow: 0 0 0 3px rgba(76,99,182,0.15);
+}
+
+.demo-hint {
+    margin-top: 20px;
+    padding: 14px;
+    background: #f7fafc;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    color: #718096;
+    line-height: 1.7;
+    text-align: left;
+}
+
+.demo-hint code {
+    background: #e2e8f0;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: #4a5568;
+}
+
+.error-msg {
+    background: #fff5f5;
+    border: 1px solid #fc8181;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #c53030;
+    margin-bottom: 16px;
+    font-size: 0.88rem;
+    text-align: left;
+}
+
+/* ----- HEADER ----- */
+.header {
+    background: linear-gradient(135deg, #4c63b6 0%, #7c3aed 100%);
+    color: white;
+    padding: 14px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header h1 { font-size: 1.3rem; font-weight: 700; }
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+#userNameDisplay {
+    font-size: 0.88rem;
+    opacity: 0.92;
+    background: rgba(255,255,255,0.15);
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+/* ----- MAIN CONTENT ----- */
+.main-content {
+    max-width: 1100px;
+    margin: 24px auto;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.card {
+    background: white;
+    border-radius: 14px;
+    padding: 24px 28px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+}
+
+.card h2 {
+    font-size: 1.15rem;
+    color: #2d3748;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #edf2f7;
+}
+
+/* ----- TOMBOL ----- */
+.btn {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: all 0.18s;
+    letter-spacing: 0.2px;
+}
+
+.btn-full { width: 100%; padding: 13px; font-size: 1rem; margin-top: 4px; }
+
+.btn-primary { background: #4c63b6; color: white; }
+.btn-primary:hover { background: #3a51a0; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(76,99,182,0.35); }
+
+.btn-success { background: #38a169; color: white; }
+.btn-success:hover { background: #2f855a; transform: translateY(-1px); }
+
+.btn-danger { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); }
+.btn-danger:hover { background: rgba(255,255,255,0.3); }
+
+.btn-disabled {
+    background: #edf2f7;
+    color: #a0aec0;
+    cursor: not-allowed;
+}
+.btn-disabled:hover { transform: none; box-shadow: none; }
+
+/* ----- BUKU GRID ----- */
+.book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 16px;
+}
+
+.book-card {
+    border: 2px solid #edf2f7;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    background: #fafbfc;
+}
+
+.book-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); border-color: #c3d0f0; }
+
+.book-card-icon { font-size: 2.4rem; text-align: center; }
+
+.book-title {
+    font-size: 0.97rem;
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1.4;
+    margin-bottom: 2px;
+}
+
+.book-author { font-size: 0.82rem; color: #718096; margin-bottom: 8px; }
+
+.book-status {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 6px;
+}
+
+.status-available { background: #c6f6d5; color: #22543d; }
+.status-unavailable { background: #fed7d7; color: #742a2a; }
+
+/* ----- TABEL PEMINJAMAN ----- */
+.borrow-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.borrow-counter.ok { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+.borrow-counter.full { background: #fff5f5; color: #c53030; border: 1px solid #fc8181; }
+
+.table-wrapper { overflow-x: auto; }
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.table th {
+    background: #f7fafc;
+    padding: 11px 14px;
+    text-align: left;
+    font-weight: 700;
+    color: #4a5568;
+    border-bottom: 2px solid #edf2f7;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #f0f4f8;
+    color: #4a5568;
+    vertical-align: middle;
+}
+
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #f7fafc; }
+
+.overdue-text { color: #e53e3e; font-weight: 700; }
+
+/* ----- BADGE ----- */
+.badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.badge-active   { background: #c6f6d5; color: #22543d; }
+.badge-overdue  { background: #fed7d7; color: #742a2a; }
+
+/* ----- EMPTY / NOTIF ----- */
+.empty-msg {
+    text-align: center;
+    padding: 28px;
+    color: #a0aec0;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* ----- MICROSERVICE STATUS BAR & ACTION BUTTONS ----- */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+}
+
+.btn-warning {
+    background: #dd6b20;
+    color: white;
+}
+.btn-warning:hover {
+    background: #c05621;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(221, 107, 32, 0.35);
+}
+
+.service-status-bar {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.service-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.dot-online {
+    width: 8px;
+    height: 8px;
+    background-color: #48bb78;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 6px #48bb78;
+}
+
+.dot-offline {
+    width: 8px;
+    height: 8px;
+    background-color: #f56565;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 6px #f56565;
+}
+
+/* ----- RESPONSIVE ----- */
+@media (max-width: 640px) {
+    .header { flex-direction: column; gap: 10px; text-align: center; }
+    .book-grid { grid-template-columns: 1fr; }
+    .table th, .table td { padding: 9px 10px; font-size: 0.82rem; }
+    #userNameDisplay { font-size: 0.78rem; }
+}
+
