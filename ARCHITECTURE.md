@@ -37,114 +37,32 @@ graph TD
 ### B. Arsitektur Sesudah (Microservices Architecture)
 Arsitektur dipecah menjadi **2 layanan backend independen** berbasis Node.js & Express.js yang berjalan pada port berbeda dan saling berkomunikasi menggunakan protokol **HTTP REST API**, dikelola dalam satu folder terpadu `backend/` dengan ekosistem pengujian Postman:
 
-flowchart TB
 
-    %% =====================================================
-    %% USER & TESTER
-    %% =====================================================
-    User["👤 Mahasiswa<br/>Browser Client"]
-    Tester["📮 Penguji API<br/>Postman / Newman CLI"]
+graph TD
+    A["Mahasiswa"] --> B["Web Frontend"]
 
-    %% =====================================================
-    %% WEB CLIENT
-    %% =====================================================
-    subgraph CLIENT["🌐 WEB CLIENT TIER"]
-        Frontend["💻 Web Frontend Client<br/>Port 3000"]
-    end
+    subgraph BACKEND["BACKEND MICROSERVICES"]
+        direction LR
 
-    %% =====================================================
-    %% BACKEND
-    %% =====================================================
-    subgraph BACKEND["⚙️ BACKEND MICROSERVICES ECOSYSTEM"]
+        subgraph BOOK["BOOK SERVICE :5001"]
+            BA["REST API"]
+            BL["Catalog Logic"]
+            BD["In-Memory DB"]
+            BA --> BL --> BD
+        end
 
-        subgraph SERVICES["MICROSERVICES"]
-            direction LR
-
-            %% -------------------------
-            %% BOOK SERVICE
-            %% -------------------------
-            subgraph BOOK["📚 BOOK SERVICE — Port 5001"]
-                direction TB
-
-                BookAPI["REST API<br/>/api/books"]
-                BookLogic["Catalog Logic<br/>• 8 Buku<br/>• Search Query<br/>• Availability"]
-                BookDB["🗄️ In-Memory DB<br/>Catalog & Stock"]
-
-                BookAPI --> BookLogic
-                BookLogic --> BookDB
-            end
-
-            %% -------------------------
-            %% BORROWING SERVICE
-            %% -------------------------
-            subgraph BORROW["📋 BORROWING SERVICE — Port 5002"]
-                direction TB
-
-                BorrowAPI["REST API<br/>/api/borrowings"]
-                BorrowLogic["Business Logic<br/>• Maks. 3 Buku<br/>• Validasi NIM<br/>• Jatuh Tempo 7 Hari"]
-                BorrowDB["🗄️ In-Memory DB<br/>Riwayat Peminjaman"]
-
-                BorrowAPI --> BorrowLogic
-                BorrowLogic --> BorrowDB
-            end
+        subgraph BORROW["BORROWING SERVICE :5002"]
+            BRA["REST API"]
+            BRL["Business Logic"]
+            BRD["In-Memory DB"]
+            BRA --> BRL --> BRD
         end
     end
 
-    %% =====================================================
-    %% USER → FRONTEND
-    %% =====================================================
-    User -->|"Akses Website"| Frontend
-
-    %% =====================================================
-    %% FRONTEND → API
-    %% =====================================================
-    Frontend -->|"GET /api/books"| BookAPI
-    Frontend -->|"GET /api/borrowings"| BorrowAPI
-    Frontend -->|"POST /api/borrowings"| BorrowAPI
-
-    %% =====================================================
-    %% TESTER → API
-    %% =====================================================
-    Tester -->|"Test API"| BookAPI
-    Tester -->|"Test API"| BorrowAPI
-
-    %% =====================================================
-    %% BORROWING → BOOK SERVICE
-    %% =====================================================
-    BorrowLogic -.->|"GET /api/books/:id<br/>Verifikasi Buku"| BookAPI
-
-    BorrowLogic -.->|"PATCH /api/books/:id/status<br/>Lock / Restore"| BookAPI
-
-    %% =====================================================
-    %% STYLING
-    %% =====================================================
-    style User fill:#FFFFFF,stroke:#111827,stroke-width:2px,color:#000000
-    style Tester fill:#FFFFFF,stroke:#111827,stroke-width:2px,color:#000000
-
-    style CLIENT fill:#E8EEF5,stroke:#1E293B,stroke-width:3px,color:#000000
-    style Frontend fill:#FFFFFF,stroke:#374151,stroke-width:2px,color:#000000
-
-    style BACKEND fill:#DCE6F1,stroke:#0F172A,stroke-width:4px,color:#000000
-    style SERVICES fill:#F8FAFC,stroke:#475569,stroke-width:2px,color:#000000
-
-    style BOOK fill:#E8F5E9,stroke:#166534,stroke-width:3px,color:#000000
-    style BORROW fill:#FFF4CC,stroke:#92400E,stroke-width:3px,color:#000000
-
-    style BookAPI fill:#B7E4C7,stroke:#166534,stroke-width:2px,color:#000000
-    style BookLogic fill:#D8F3DC,stroke:#166534,stroke-width:2px,color:#000000
-    style BookDB fill:#FFFFFF,stroke:#166534,stroke-width:2px,color:#000000
-
-    style BorrowAPI fill:#FFD166,stroke:#92400E,stroke-width:2px,color:#000000
-    style BorrowLogic fill:#FFE8A3,stroke:#92400E,stroke-width:2px,color:#000000
-    style BorrowDB fill:#FFFFFF,stroke:#92400E,stroke-width:2px,color:#000000
-
-    %% =====================================================
-    %% LINE STYLE
-    %% =====================================================
-    linkStyle default stroke:#334155,stroke-width:2px
+    B --> BA
+    B --> BRA
+    BRL -.-> BA
 ```
-
----
 
 ## 2. Diagram Alur Inter-Service Communication
 
