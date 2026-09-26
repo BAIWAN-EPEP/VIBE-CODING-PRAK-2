@@ -15,44 +15,36 @@ Sistem ini memiliki 3 akun mahasiswa aktif yang digunakan untuk pengujian alur p
 
 ## Panduan Menjalankan Sistem
 
-Untuk menjalankan sistem secara lengkap, Anda membutuhkan 3 terminal terpisah:
-
-### 1. Menjalankan Book Service (Port 5001)
-
-Buka terminal pertama:
+### ⚡ Cara Praktis: Sekali Panggil dalam 1 Terminal (Rekomendasi)
+Cukup buka terminal di folder utama proyek (`PRAKTIKUM 2`) lalu jalankan:
 
 ```bash
-cd services/book-service
-npm install
 npm start
-
 ```
+*(Atau pada Windows: cukup **klik 2x file `start.bat`**)*
 
-Layanan Book Service aktif di: `http://localhost:5001`
+Satu perintah di atas otomatis menjalankan:
+1. 📚 **Book Service** di `http://localhost:5001`
+2. 📋 **Borrowing Service** di `http://localhost:5002`
+3. 🌐 **Frontend Web Client** di `http://localhost:3000`
 
-### 2. Menjalankan Borrowing Service (Port 5002)
+---
 
-Buka terminal kedua:
+### 📮 Pengujian API dengan Postman
+Kami telah menyediakan koleksi API lengkap untuk Postman di folder `postman/`:
+* **File Koleksi**: `postman/library_microservices.postman_collection.json`
+* **Jalankan Otomatis di Terminal (Newman)**:
+  ```bash
+  npm run test:api
+  ```
+* Panduan lengkap langkah demi langkah untuk pemula dapat dibaca di: **[PANDUAN_POSTMAN.md](PANDUAN_POSTMAN.md)**.
 
-```bash
-cd services/borrowing-service
-npm install
-npm start
+---
 
-```
-
-Layanan Borrowing Service aktif di: `http://localhost:5002`
-
-### 3. Menjalankan Frontend Web Client (Port 3000)
-
-Buka terminal ketiga di direktori utama:
-
-```bash
-python -m http.server 3000
-
-```
-
-Buka peramban (browser) dan akses alamat: `http://localhost:3000`
+### 📁 Struktur Arsitektur Backend:
+Seluruh logika layanan microservices (Book Service Port 5001 & Borrowing Service Port 5002) kini tersentralisasi secara terpadu di dalam satu folder:
+* **Folder**: `backend/`
+* **Entry Point**: `backend/server.js`
 
 ---
 
@@ -144,9 +136,10 @@ Setiap buku yang belum dipinjam akan memiliki status Tersedia dan tombol Pinjam 
 
 ## Berkas Dokumentasi Lainnya
 
-Sesuai ketentuan tugas praktikum, rincian teknis telah dipisahkan ke dalam berkas-berkas tersendiri:
+Sesuai ketentuan pengumpulan tugas kelompok, seluruh dokumen pendukung telah disusun lengkap:
 
-* ARCHITECTURE.md : Diagram arsitektur sebelum vs sesudah, alur inter-service, dan kontrak endpoint API.
-* TECH_STACK.md : Daftar lengkap teknologi, framework, dan pustaka yang digunakan.
-* AI_DOCUMENTATION.md : Dokumentasi penggunaan AI coding tool, analisis bug hasil AI, dan solusinya (tempat screenshot AI).
-* PROMPTS.md : Kumpulan prompt yang digunakan selama proses pengembangan sistem.
+* **[ARCHITECTURE.md](ARCHITECTURE.md)** : Diagram arsitektur sebelum vs sesudah, sequence diagram inter-service, dan kontrak endpoint API.
+* **[TEKNOLOGI.md](TEKNOLOGI.md)** : Daftar lengkap teknologi, framework, dan pustaka yang digunakan.
+* **[AI_DOCUMENTATION.md](AI_DOCUMENTATION.md)** : Dokumentasi penggunaan AI coding tool, analisis bug hasil AI, solusinya, serta poin presentasi sharing session.
+* **[PROMPT.md](PROMPT.md)** : Kumpulan prompt yang digunakan selama proses pengembangan sistem.
+* **[PANDUAN_POSTMAN.md](PANDUAN_POSTMAN.md)** : Panduan lengkap penggunaan API Postman dan Newman CLI bagi pemula.

@@ -1,0 +1,19 @@
+{
+  "name": "perpustakaan-microservices",
+  "version": "1.0.0",
+  "description": "Sistem Peminjaman Buku Perpustakaan Berbasis Microservices",
+  "scripts": {
+    "setup": "cd backend && npm install",
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js",
+    "test:api": "npx -y newman run postman/library_microservices.postman_collection.json"
+  },
+  "keywords": [
+    "microservices",
+    "postman",
+    "express",
+    "library"
+  ],
+  "author": "",
+  "license": "ISC"
+}

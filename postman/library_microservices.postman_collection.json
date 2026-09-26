@@ -1,0 +1,296 @@
+{
+  "info": {
+    "_postman_id": "c71a3d82-e8ef-4efb-8bb5-95e2f75a6c01",
+    "name": "Sistem Perpustakaan Microservices",
+    "description": "Koleksi API Postman untuk menguji Book Service (Port 5001) dan Borrowing Service (Port 5002).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "bookServiceUrl",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "borrowServiceUrl",
+      "value": "http://localhost:5002",
+      "type": "string"
+    },
+    {
+      "key": "currentBorrowingId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Book Service (5001)",
+      "item": [
+        {
+          "name": "1.1 Health Check Book Service",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code adalah 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Book Service dalam kondisi healthy\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"healthy\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bookServiceUrl}}/health",
+              "host": ["{{bookServiceUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Memeriksa status hidup/aktif dari Book Service (Port 5001)."
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Ambil Seluruh Katalog Buku",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code adalah 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Katalog memiliki daftar buku\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bookServiceUrl}}/api/books",
+              "host": ["{{bookServiceUrl}}"],
+              "path": ["api", "books"]
+            },
+            "description": "Mengambil semua 8 buku yang ada di katalog perpustakaan."
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Pencarian Buku (Query Search)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bookServiceUrl}}/api/books?search=web",
+              "host": ["{{bookServiceUrl}}"],
+              "path": ["api", "books"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "web"
+                }
+              ]
+            },
+            "description": "Filter pencarian buku berdasarkan kata kunci judul atau penulis."
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 Ambil Detail Buku by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bookServiceUrl}}/api/books/1",
+              "host": ["{{bookServiceUrl}}"],
+              "path": ["api", "books", "1"]
+            },
+            "description": "Mengambil rincian data buku berdasarkan ID."
+          },
+          "response": []
+        },
+        {
+          "name": "1.5 Reset Katalog Buku",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{bookServiceUrl}}/api/books/reset",
+              "host": ["{{bookServiceUrl}}"],
+              "path": ["api", "books", "reset"]
+            },
+            "description": "Mengembalikan kondisi katalog buku ke data awal."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Borrowing Service (5002)",
+      "item": [
+        {
+          "name": "2.1 Health Check Borrowing Service",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code adalah 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Borrowing Service dalam kondisi healthy\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"healthy\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{borrowServiceUrl}}/health",
+              "host": ["{{borrowServiceUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Memeriksa status hidup/aktif dari Borrowing Service (Port 5002)."
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Ambil Seluruh Transaksi Peminjaman",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{borrowServiceUrl}}/api/borrowings",
+              "host": ["{{borrowServiceUrl}}"],
+              "path": ["api", "borrowings"]
+            },
+            "description": "Melihat seluruh rekaman data peminjaman buku yang ada."
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Ambil Peminjaman Berdasarkan NIM",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{borrowServiceUrl}}/api/borrowings/12345",
+              "host": ["{{borrowServiceUrl}}"],
+              "path": ["api", "borrowings", "12345"]
+            },
+            "description": "Melihat daftar buku yang sedang/pernah dipinjam oleh NIM 12345 (Ahmad Fauzi)."
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 Pinjam Buku (Alur Inter-Service)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Peminjaman berhasil diproses\", function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "    const data = pm.response.json();",
+                  "    if (data.borrowing) {",
+                  "        pm.collectionVariables.set(\"currentBorrowingId\", data.borrowing.id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nim\": \"12345\",\n  \"bookId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{borrowServiceUrl}}/api/borrowings",
+              "host": ["{{borrowServiceUrl}}"],
+              "path": ["api", "borrowings"]
+            },
+            "description": "Menguji peminjaman buku. Borrowing Service akan otomatis memanggil Book Service di Port 5001."
+          },
+          "response": []
+        },
+        {
+          "name": "2.5 Kembalikan Buku (Alur Inter-Service)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Pengembalian berhasil diproses\", function () {",
+                  "    pm.expect([200, 400, 404]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"borrowingId\": \"{{currentBorrowingId}}\",\n  \"bookId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{borrowServiceUrl}}/api/borrowings/return",
+              "host": ["{{borrowServiceUrl}}"],
+              "path": ["api", "borrowings", "return"]
+            },
+            "description": "Menguji pengembalian buku. Borrowing Service akan memanggil Book Service untuk merestorasi status ketersediaan buku."
+          },
+          "response": []
+        },
+        {
+          "name": "2.6 Reset Data Peminjaman",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{borrowServiceUrl}}/api/borrowings/reset",
+              "host": ["{{borrowServiceUrl}}"],
+              "path": ["api", "borrowings", "reset"]
+            },
+            "description": "Mengosongkan kembali seluruh riwayat peminjaman untuk pengujian ulang."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
