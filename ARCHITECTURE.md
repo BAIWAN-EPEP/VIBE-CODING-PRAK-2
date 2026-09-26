@@ -9,11 +9,6 @@ Dokumen ini menjelaskan rancangan arsitektur sistem peminjaman buku perpustakaan
 ### A. Arsitektur Sebelum (Monolith Client-Side)
 Pada tahap awal (Pertemuan 1/Prototype awal), seluruh logika bisnis, pengelolaan data buku, validasi peminjaman, dan sesi login dijalankan secara terpusat di dalam satu aplikasi *client-side* browser menggunakan `localStorage`.
 
-![Diagram Arsitektur Sebelum](diagram/assets/architecture_before.png)
-
-<details>
-<summary><b>Klik untuk melihat source code Mermaid (Arsitektur Sebelum)</b></summary>
-
 ```mermaid
 graph TD
     User["👤 Mahasiswa / Pengguna"]
@@ -24,11 +19,13 @@ graph TD
         Storage[("Browser localStorage<br/>(Penyimpanan Data Lokal)")]
     end
     
-    User --> UI
-    UI --> Logic
-    Logic <--> Storage
+    User -->|Interaksi UI| UI
+    UI -->|Panggil Fungsi| Logic
+    Logic <-->|Baca/Tulis Data JSON| Storage
+
+    style Browser fill:#f8f9fa,stroke:#6c757d,stroke-width:2px;
+    style Storage fill:#e9ecef,stroke:#495057,stroke-width:1px;
 ```
-</details>
 
 **Keterbatasan Arsitektur Awal:**
 * Data hanya tersimpan di peramban masing-masing perangkat (tidak terdistribusi).
@@ -39,11 +36,6 @@ graph TD
 
 ### B. Arsitektur Sesudah (Microservices Architecture)
 Arsitektur dipecah menjadi **2 layanan backend independen** berbasis Node.js & Express.js yang berjalan pada port berbeda dan saling berkomunikasi menggunakan protokol **HTTP REST API**, dikelola dalam satu folder terpadu `backend/` dengan ekosistem pengujian Postman:
-
-![Diagram Arsitektur Sesudah](diagram/assets/architecture_after.png)
-
-<details>
-<summary><b>Klik untuk melihat source code Mermaid (Arsitektur Sesudah)</b></summary>
 
 ```mermaid
 graph TD
@@ -69,13 +61,14 @@ graph TD
         end
     end
 
-    User --> ClientApp
+    User -->|Akses Web| ClientApp
     ClientApp -->|HTTP GET /api/books| BookAPI
     ClientApp -->|HTTP GET & POST /api/borrowings| BorrowAPI
 
-    Tester --> BookAPI
-    Tester --> BorrowAPI
+    Tester -->|Automated API Testing| BookAPI
+    Tester -->|Automated API Testing| BorrowAPI
 
+    %% Komunikasi Antar-Service
     BorrowLogic -->|"1. GET /api/books/{id} (Verifikasi Status)"| BookAPI
     BorrowLogic -->|"2. PATCH /api/books/{id}/status (Kunci/Restorasi Status)"| BookAPI
 
@@ -84,8 +77,12 @@ graph TD
 
     BookAPI --- BookLogic
     BookLogic --- BookDB
+
+    style Backend_Tier fill:#f1f8ff,stroke:#0366d6,stroke-width:2px;
+    style Book_SVC fill:#e6ffed,stroke:#28a745,stroke-width:2px;
+    style Borrow_SVC fill:#fff5b1,stroke:#d73a49,stroke-width:2px;
+    style Client_Tier fill:#ffffff,stroke:#6f42c1,stroke-width:2px;
 ```
-</details>
 
 ---
 
@@ -93,11 +90,6 @@ graph TD
 
 ### A. Alur Peminjaman Buku (Borrowing Flow)
 Ketika mahasiswa mengklik tombol **Pinjam Buku** di frontend, terjadi proses kolaborasi antar-service sebagai berikut:
-
-![Sequence Diagram Peminjaman Buku](diagram/assets/sequence_borrowing.png)
-
-<details>
-<summary><b>Klik untuk melihat source code Sequence Diagram (Peminjaman)</b></summary>
 
 ```mermaid
 sequenceDiagram
@@ -134,17 +126,11 @@ sequenceDiagram
 
     M->>M: Perbarui antarmuka (UI) & Disable tombol pinjam
 ```
-</details>
 
 ---
 
 ### B. Alur Pengembalian Buku (Return Flow)
 Ketika mahasiswa mengklik tombol **Kembalikan Buku**:
-
-![Sequence Diagram Pengembalian Buku](diagram/assets/sequence_returning.png)
-
-<details>
-<summary><b>Klik untuk melihat source code Sequence Diagram (Pengembalian)</b></summary>
 
 ```mermaid
 sequenceDiagram
@@ -171,7 +157,6 @@ sequenceDiagram
 
     M->>M: Hapus buku dari tabel peminjaman aktif & jadikan tombol "Tersedia"
 ```
-</details>
 
 ---
 

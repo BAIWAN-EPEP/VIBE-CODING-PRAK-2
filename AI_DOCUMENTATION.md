@@ -15,11 +15,6 @@ Dokumen ini memuat catatan komprehensif mengenai penerapan **AI Coding Tool** da
 
 ## 2. Peran AI dalam Setiap Tahapan Pengembangan
 
-![Bukti Prompting AI](dokumentary/assets/04_prompt_ai.jpg)
-
-<details>
-<summary><b>Klik untuk melihat diagram alur AI-Assisted Development</b></summary>
-
 ```mermaid
 graph LR
     A["1. Requirement & User Story"] --> B["2. Prompt ke AI"]
@@ -32,9 +27,6 @@ graph LR
     F -- Tidak --> I["8. Single-Runner & Postman Automation"]
     H --> E
 ```
-</details>
-
-![Bukti Implementation Plan AI](dokumentary/assets/ai_03_implementation_plan.jpg)
 
 ### A. Tahap Analisis & Dekomposisi Layanan (Microservices Decomposition)
 * **Bantuan AI**: Membantu membagi sistem perpustakaan monolitik menjadi 2 domain terpisah:
@@ -132,9 +124,6 @@ Setelah perbaikan diterapkan, pengujian regresi (*Regression Testing*) dilakukan
 | **TC-3** | Mahasiswa B login dan meminjam buku ke-1 | ❌ **Gagal (Ikut Ditolak)** | ✅ **Berhasil Dipinjam** | **Bug Berhasil Diperbaiki** |
 | **TC-4** | Mahasiswa A mengembalikan 1 buku | ✅ Berhasil | ✅ Berhasil | Normal |
 | **TC-5** | Mahasiswa A meminjam kembali setelah kuota longgar | ✅ Berhasil | ✅ Berhasil | Normal |
-
-![Bukti Pengujian & Regression Testing](dokumentary/assets/ai_01_testing.jpg)
-![Bukti Walkthrough Pengembangan](dokumentary/assets/ai_02_walkthrough.jpg)
 
 ---
 
