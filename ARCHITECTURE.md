@@ -37,51 +37,111 @@ graph TD
 ### B. Arsitektur Sesudah (Microservices Architecture)
 Arsitektur dipecah menjadi **2 layanan backend independen** berbasis Node.js & Express.js yang berjalan pada port berbeda dan saling berkomunikasi menggunakan protokol **HTTP REST API**, dikelola dalam satu folder terpadu `backend/` dengan ekosistem pengujian Postman:
 
-```mermaid
-graph TD
-    User["👤 Mahasiswa (Browser Client)"]
-    Tester["📮 Penguji API (Postman / Newman CLI)"]
+flowchart TB
 
-    subgraph Client_Tier ["🌐 Web Client Tier"]
-        ClientApp["Web Frontend Client<br/>(Port 3000)"]
+    %% =====================================================
+    %% USER & TESTER
+    %% =====================================================
+    User["👤 Mahasiswa<br/>Browser Client"]
+    Tester["📮 Penguji API<br/>Postman / Newman CLI"]
+
+    %% =====================================================
+    %% WEB CLIENT
+    %% =====================================================
+    subgraph CLIENT["🌐 WEB CLIENT TIER"]
+        Frontend["💻 Web Frontend Client<br/>Port 3000"]
     end
 
-    subgraph Backend_Tier ["⚙️ Backend Microservices Ecosystem (backend/server.js)"]
-        
-        subgraph Borrow_SVC ["📋 Borrowing Service (Port 5002)"]
-            BorrowAPI["REST API: /api/borrowings"]
-            BorrowLogic["Business Logic:<br/>• Validasi Kuota Max 3 Buku<br/>• Isolasi Akun Mahasiswa (NIM)<br/>• Penghitungan Jatuh Tempo (7 Hari)"]
-            BorrowDB[("In-Memory DB:<br/>Riwayat Transaksi Peminjaman")]
-        end
+    %% =====================================================
+    %% BACKEND
+    %% =====================================================
+    subgraph BACKEND["⚙️ BACKEND MICROSERVICES ECOSYSTEM"]
 
-        subgraph Book_SVC ["📚 Book Service (Port 5001)"]
-            BookAPI["REST API: /api/books"]
-            BookLogic["Catalog Logic:<br/>• Katalog 8 Buku Perpustakaan<br/>• Pencarian Buku (Search Query)<br/>• Status Ketersediaan (available: true/false)"]
-            BookDB[("In-Memory DB:<br/>Katalog & Stok Buku")]
+        subgraph SERVICES["MICROSERVICES"]
+            direction LR
+
+            %% -------------------------
+            %% BOOK SERVICE
+            %% -------------------------
+            subgraph BOOK["📚 BOOK SERVICE — Port 5001"]
+                direction TB
+
+                BookAPI["REST API<br/>/api/books"]
+                BookLogic["Catalog Logic<br/>• 8 Buku<br/>• Search Query<br/>• Availability"]
+                BookDB["🗄️ In-Memory DB<br/>Catalog & Stock"]
+
+                BookAPI --> BookLogic
+                BookLogic --> BookDB
+            end
+
+            %% -------------------------
+            %% BORROWING SERVICE
+            %% -------------------------
+            subgraph BORROW["📋 BORROWING SERVICE — Port 5002"]
+                direction TB
+
+                BorrowAPI["REST API<br/>/api/borrowings"]
+                BorrowLogic["Business Logic<br/>• Maks. 3 Buku<br/>• Validasi NIM<br/>• Jatuh Tempo 7 Hari"]
+                BorrowDB["🗄️ In-Memory DB<br/>Riwayat Peminjaman"]
+
+                BorrowAPI --> BorrowLogic
+                BorrowLogic --> BorrowDB
+            end
         end
     end
 
-    User -->|Akses Web| ClientApp
-    ClientApp -->|HTTP GET /api/books| BookAPI
-    ClientApp -->|HTTP GET & POST /api/borrowings| BorrowAPI
+    %% =====================================================
+    %% USER → FRONTEND
+    %% =====================================================
+    User -->|"Akses Website"| Frontend
 
-    Tester -->|Automated API Testing| BookAPI
-    Tester -->|Automated API Testing| BorrowAPI
+    %% =====================================================
+    %% FRONTEND → API
+    %% =====================================================
+    Frontend -->|"GET /api/books"| BookAPI
+    Frontend -->|"GET /api/borrowings"| BorrowAPI
+    Frontend -->|"POST /api/borrowings"| BorrowAPI
 
-    %% Komunikasi Antar-Service
-    BorrowLogic -->|"1. GET /api/books/{id} (Verifikasi Status)"| BookAPI
-    BorrowLogic -->|"2. PATCH /api/books/{id}/status (Kunci/Restorasi Status)"| BookAPI
+    %% =====================================================
+    %% TESTER → API
+    %% =====================================================
+    Tester -->|"Test API"| BookAPI
+    Tester -->|"Test API"| BorrowAPI
 
-    BorrowAPI --- BorrowLogic
-    BorrowLogic --- BorrowDB
+    %% =====================================================
+    %% BORROWING → BOOK SERVICE
+    %% =====================================================
+    BorrowLogic -.->|"GET /api/books/:id<br/>Verifikasi Buku"| BookAPI
 
-    BookAPI --- BookLogic
-    BookLogic --- BookDB
+    BorrowLogic -.->|"PATCH /api/books/:id/status<br/>Lock / Restore"| BookAPI
 
-    style Backend_Tier fill:#f1f8ff,stroke:#0366d6,stroke-width:2px;
-    style Book_SVC fill:#e6ffed,stroke:#28a745,stroke-width:2px;
-    style Borrow_SVC fill:#fff5b1,stroke:#d73a49,stroke-width:2px;
-    style Client_Tier fill:#ffffff,stroke:#6f42c1,stroke-width:2px;
+    %% =====================================================
+    %% STYLING
+    %% =====================================================
+    style User fill:#FFFFFF,stroke:#111827,stroke-width:2px,color:#000000
+    style Tester fill:#FFFFFF,stroke:#111827,stroke-width:2px,color:#000000
+
+    style CLIENT fill:#E8EEF5,stroke:#1E293B,stroke-width:3px,color:#000000
+    style Frontend fill:#FFFFFF,stroke:#374151,stroke-width:2px,color:#000000
+
+    style BACKEND fill:#DCE6F1,stroke:#0F172A,stroke-width:4px,color:#000000
+    style SERVICES fill:#F8FAFC,stroke:#475569,stroke-width:2px,color:#000000
+
+    style BOOK fill:#E8F5E9,stroke:#166534,stroke-width:3px,color:#000000
+    style BORROW fill:#FFF4CC,stroke:#92400E,stroke-width:3px,color:#000000
+
+    style BookAPI fill:#B7E4C7,stroke:#166534,stroke-width:2px,color:#000000
+    style BookLogic fill:#D8F3DC,stroke:#166534,stroke-width:2px,color:#000000
+    style BookDB fill:#FFFFFF,stroke:#166534,stroke-width:2px,color:#000000
+
+    style BorrowAPI fill:#FFD166,stroke:#92400E,stroke-width:2px,color:#000000
+    style BorrowLogic fill:#FFE8A3,stroke:#92400E,stroke-width:2px,color:#000000
+    style BorrowDB fill:#FFFFFF,stroke:#92400E,stroke-width:2px,color:#000000
+
+    %% =====================================================
+    %% LINE STYLE
+    %% =====================================================
+    linkStyle default stroke:#334155,stroke-width:2px
 ```
 
 ---
