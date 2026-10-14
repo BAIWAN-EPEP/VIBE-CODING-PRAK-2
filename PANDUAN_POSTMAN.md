@@ -16,9 +16,9 @@ npm start
 *(atau bisa juga `node backend/server.js`)*
 
 Sistem akan otomatis mengaktifkan:
-* 📚 **Book Service** di `http://localhost:5001`
-* 📋 **Borrowing Service** di `http://localhost:5002`
-* 🌐 **Frontend Web Client** di `http://localhost:3000`
+* 📚 **Book Service** di ``
+* 📋 **Borrowing Service** di ``
+* 🌐 **Frontend Web Client** di ``
 
 ### Opsi B: Klik 2x File `start.bat` (Khusus Windows)
 Cukup buka Windows Explorer pada folder proyek ini, lalu klik dua kali file **`start.bat`**. Seluruh service langsung menyala otomatis!
@@ -36,7 +36,7 @@ Saat Anda membuka web di browser dan mengklik tombol "Pinjam Buku", browser sebe
    * `GET` : Mengambil atau membaca data (misal: melihat katalog buku).
    * `POST` : Mengirimkan data baru (misal: melakukan peminjaman buku).
    * `PATCH` : Memperbarui sebagian data (misal: mengubah status buku).
-2. **URL**: Alamat tujuan API (contoh: `http://localhost:5001/api/books`).
+2. **URL**: Alamat tujuan API (contoh: ``).
 3. **Body (JSON)**: Data yang dikirimkan bersama permintaan (misal NIM dan ID buku).
 4. **Status Code**:
    * `200 OK` / `201 Created` : Berhasil.

@@ -1,24 +1,22 @@
 // =============================================================
-//  SISTEM PEMINJAMAN BUKU PERPUSTAKAAN (MICROSERVICES CLIENT)
-//  Arsitektur: Microservices Frontend Client
-//  Book Service       : http://localhost:5001
-//  Borrowing Service  : http://localhost:5002
+// SISTEM PEMINJAMAN BUKU PERPUSTAKAAN
+// Frontend Client + JWT Authentication
+// Backend: http://localhost:3000
 // =============================================================
 
-const BOOK_SERVICE_URL   = 'http://localhost:5001';
-const BORROW_SERVICE_URL = 'http://localhost:5002';
+const BOOK_SERVICE_URL = '';
+const BORROW_SERVICE_URL = '';
 
-// ─── DATA DEMO MAHASISWA (AUTHENTICATION) ───────────────────
-const STUDENTS = [
-    { nim: '12345', name: 'Ahmad Fauzi',    password: 'pass123' },
-    { nim: '67890', name: 'Siti Rahayu',    password: 'pass456' },
-    { nim: '11111', name: 'Budi Santoso',   password: 'pass789' }
-];
+// ─── SESSION STORAGE HELPERS ─────────────────────────────────
 
-// ─── SESSION STORAGE HELPERS ────────────────────────────────
 function getSession() {
-    const stored = localStorage.getItem('lib_session');
-    return stored ? JSON.parse(stored) : null;
+    try {
+        const stored = localStorage.getItem('lib_session');
+        return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+        localStorage.removeItem('lib_session');
+        return null;
+    }
 }
 
 function saveSession(user) {
@@ -29,11 +27,24 @@ function clearSession() {
     localStorage.removeItem('lib_session');
 }
 
-// ─── AUTENTIKASI ─────────────────────────────────────────────
-function login() {
-    const nim      = document.getElementById('nim').value.trim();
+// Header untuk request API yang membutuhkan autentikasi
+function authHeaders() {
+    const session = getSession();
+
+    return {
+        'Content-Type': 'application/json',
+        ...(session?.token
+            ? { 'Authorization': `Bearer ${session.token}` }
+            : {})
+    };
+}
+
+// ─── AUTENTIKASI JWT ─────────────────────────────────────────
+
+async function login() {
+    const nim = document.getElementById('nim').value.trim();
     const password = document.getElementById('password').value;
-    const errDiv   = document.getElementById('loginError');
+    const errDiv = document.getElementById('loginError');
 
     errDiv.style.display = 'none';
 
@@ -42,16 +53,46 @@ function login() {
         return;
     }
 
-    const student = STUDENTS.find(s => s.nim === nim && s.password === password);
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nim, password })
+        });
 
-    if (!student) {
-        showError(errDiv, '❌ NIM atau Password salah. Silakan coba lagi.');
-        return;
+        const data = await response.json();
+
+        if (!response.ok) {
+            showError(
+                errDiv,
+                data.message || 'NIM atau Password salah.'
+            );
+            return;
+        }
+
+        if (!data.token || !data.user) {
+            showError(errDiv, 'Respons login tidak memiliki token JWT.');
+            return;
+        }
+
+        const user = {
+            nim: data.user.nim,
+            name: data.user.name,
+            token: data.token
+        };
+
+        saveSession(user);
+        showMainPage(user);
+
+    } catch (error) {
+        console.error('Login error:', error);
+        showError(
+            errDiv,
+            '⚠️ Tidak dapat terhubung ke backend. Pastikan server berjalan.'
+        );
     }
-
-    const user = { nim: student.nim, name: student.name };
-    saveSession(user);
-    showMainPage(user);
 }
 
 function logout() {
@@ -65,71 +106,103 @@ function showError(element, message) {
 }
 
 // ─── NAVIGASI ────────────────────────────────────────────────
+
 function showLoginPage() {
     document.getElementById('loginSection').style.display = 'flex';
-    document.getElementById('mainSection').style.display  = 'none';
-    document.getElementById('nim').value      = '';
+    document.getElementById('mainSection').style.display = 'none';
+    document.getElementById('nim').value = '';
     document.getElementById('password').value = '';
     document.getElementById('loginError').style.display = 'none';
 }
 
 function showMainPage(user) {
     document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('mainSection').style.display  = 'block';
+    document.getElementById('mainSection').style.display = 'block';
+
     document.getElementById('userNameDisplay').textContent =
         `👤 ${user.name} — NIM ${user.nim}`;
+
     checkServicesHealth();
     renderAll();
 }
 
-// ─── HEALTH CHECK INDIKATOR MICROSERVICES ────────────────────
-async function checkServicesHealth() {
-    // 1. Cek Book Service (5001)
-    try {
-        const res = await fetch(`${BOOK_SERVICE_URL}/health`);
-        const statusEl = document.getElementById('statusBookService');
-        if (res.ok && statusEl) {
-            statusEl.innerHTML = '<span class="dot-online"></span> Book Service (5001)';
-        }
-    } catch (e) {
-        const statusEl = document.getElementById('statusBookService');
-        if (statusEl) {
-            statusEl.innerHTML = '<span class="dot-offline"></span> Book Service (Offline)';
-        }
-    }
+// ─── HEALTH CHECK ────────────────────────────────────────────
 
-    // 2. Cek Borrowing Service (5002)
+async function checkServicesHealth() {
+    const bookStatus = document.getElementById('statusBookService');
+    const borrowStatus = document.getElementById('statusBorrowService');
+
     try {
-        const res = await fetch(`${BORROW_SERVICE_URL}/health`);
-        const statusEl = document.getElementById('statusBorrowService');
-        if (res.ok && statusEl) {
-            statusEl.innerHTML = '<span class="dot-online"></span> Borrowing Service (5002)';
+        const response = await fetch('/health');
+
+        if (response.ok) {
+            if (bookStatus) {
+                bookStatus.innerHTML =
+                    '<span class="dot-online"></span> Backend API (3000)';
+            }
+            if (borrowStatus) {
+                borrowStatus.innerHTML =
+                    '<span class="dot-online"></span> Backend API (3000)';
+            }
+        } else {
+            throw new Error('Backend tidak tersedia');
         }
-    } catch (e) {
-        const statusEl = document.getElementById('statusBorrowService');
-        if (statusEl) {
-            statusEl.innerHTML = '<span class="dot-offline"></span> Borrowing Service (Offline)';
+    } catch (error) {
+        if (bookStatus) {
+            bookStatus.innerHTML =
+                '<span class="dot-offline"></span> Backend Offline';
+        }
+        if (borrowStatus) {
+            borrowStatus.innerHTML =
+                '<span class="dot-offline"></span> Backend Offline';
         }
     }
 }
 
 // ─── API CLIENT CALLS ────────────────────────────────────────
 
-// Ambil seluruh daftar buku dari Book Service (Port 5001)
 async function fetchBooks() {
-    const res = await fetch(`${BOOK_SERVICE_URL}/api/books`);
-    if (!res.ok) throw new Error('Gagal memuat katalog buku dari Book Service');
-    return await res.json();
+    const response = await fetch('/api/books', {
+        headers: authHeaders()
+    });
+
+    if (response.status === 401 || response.status === 403) {
+        handleExpiredSession();
+        throw new Error('Sesi tidak valid. Silakan login kembali.');
+    }
+
+    if (!response.ok) {
+        throw new Error('Gagal memuat katalog buku.');
+    }
+
+    return await response.json();
 }
 
-// Ambil riwayat peminjaman mahasiswa dari Borrowing Service (Port 5002)
 async function fetchUserBorrowings(nim) {
-    const res = await fetch(`${BORROW_SERVICE_URL}/api/borrowings/${nim}`);
-    if (!res.ok) throw new Error('Gagal memuat data peminjaman dari Borrowing Service');
-    return await res.json();
+    const response = await fetch(
+        `${BORROW_SERVICE_URL}/api/borrowings/${encodeURIComponent(nim)}`,
+        { headers: authHeaders() }
+    );
+
+    if (response.status === 401 || response.status === 403) {
+        handleExpiredSession();
+        throw new Error('Sesi tidak valid. Silakan login kembali.');
+    }
+
+    if (!response.ok) {
+        throw new Error('Gagal memuat data peminjaman.');
+    }
+
+    return await response.json();
+}
+
+function handleExpiredSession() {
+    clearSession();
+    showLoginPage();
 }
 
 // ─── RENDER UTAMA ────────────────────────────────────────────
+
 async function renderAll() {
     const session = getSession();
     if (!session) return;
@@ -137,26 +210,38 @@ async function renderAll() {
     checkServicesHealth();
 
     try {
-        // Ambil data secara paralel dari kedua microservice
         const [books, borrowings] = await Promise.all([
             fetchBooks(),
             fetchUserBorrowings(session.nim)
         ]);
 
-        const userActiveBorrowings = borrowings.filter(b => b.status === 'active');
+        const userActiveBorrowings = borrowings.filter(
+            borrowing => borrowing.status === 'active'
+        );
 
         renderActiveBorrowings(userActiveBorrowings, books);
         renderBooks(books, userActiveBorrowings);
-    } catch (err) {
-        console.error('Error fetching data from microservices:', err);
-        document.getElementById('activeBorrowings').innerHTML =
-            `<p class="empty-msg" style="color:#e53e3e;">⚠️ Tidak dapat terhubung ke Backend Microservices: ${err.message}. Pastikan kedua service sudah berjalan di port 5001 & 5002.</p>`;
-        document.getElementById('bookList').innerHTML =
-            `<p class="empty-msg" style="color:#e53e3e;">⚠️ Gagal memuat daftar buku dari Book Service.</p>`;
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+
+        const activeEl = document.getElementById('activeBorrowings');
+        const bookEl = document.getElementById('bookList');
+
+        if (activeEl) {
+            activeEl.innerHTML =
+                `<p class="empty-msg" style="color:#e53e3e;">⚠️ ${error.message}</p>`;
+        }
+
+        if (bookEl) {
+            bookEl.innerHTML =
+                '<p class="empty-msg" style="color:#e53e3e;">Gagal memuat daftar buku.</p>';
+        }
     }
 }
 
-// Render tabel peminjaman aktif milik user yang sedang login
+// ─── RENDER PEMINJAMAN AKTIF ─────────────────────────────────
+
 function renderActiveBorrowings(userBorrowings, books) {
     const container = document.getElementById('activeBorrowings');
 
@@ -166,8 +251,8 @@ function renderActiveBorrowings(userBorrowings, books) {
         return;
     }
 
-    const isFull  = userBorrowings.length >= 3;
-    const today   = new Date();
+    const isFull = userBorrowings.length >= 3;
+    const today = new Date();
 
     let html = `
       <div class="borrow-counter ${isFull ? 'full' : 'ok'}">
@@ -188,25 +273,30 @@ function renderActiveBorrowings(userBorrowings, books) {
         </thead>
         <tbody>`;
 
-    userBorrowings.forEach((b, idx) => {
-        const book      = books.find(bk => bk.id === b.bookId);
-        const dueDate   = new Date(b.dueDate);
+    userBorrowings.forEach((borrowing, index) => {
+        const book = books.find(item => item.id === borrowing.bookId);
+        const dueDate = new Date(borrowing.dueDate);
         const isOverdue = dueDate < today;
-        const title     = book ? book.title : (b.bookTitle || 'Buku #' + b.bookId);
+        const title = book
+            ? book.title
+            : (borrowing.bookTitle || 'Buku #' + borrowing.bookId);
 
         html += `
           <tr>
-            <td>${idx + 1}</td>
+            <td>${index + 1}</td>
             <td><strong>${title}</strong></td>
-            <td>${formatDate(new Date(b.borrowDate))}</td>
-            <td class="${isOverdue ? 'overdue-text' : ''}">${formatDate(dueDate)}</td>
+            <td>${formatDate(new Date(borrowing.borrowDate))}</td>
+            <td class="${isOverdue ? 'overdue-text' : ''}">
+                ${formatDate(dueDate)}
+            </td>
             <td>
               <span class="badge ${isOverdue ? 'badge-overdue' : 'badge-active'}">
                 ${isOverdue ? '⚠️ Terlambat' : '✅ Aktif'}
               </span>
             </td>
             <td>
-              <button class="btn btn-warning btn-sm" onclick="returnBook('${b.id}', ${b.bookId})">
+              <button class="btn btn-warning btn-sm"
+                onclick="returnBook('${borrowing.id}', ${borrowing.bookId})">
                 ↩️ Kembalikan
               </button>
             </td>
@@ -217,38 +307,44 @@ function renderActiveBorrowings(userBorrowings, books) {
     container.innerHTML = html;
 }
 
-// Render grid daftar buku
+// ─── RENDER KATALOG BUKU ─────────────────────────────────────
+
 function renderBooks(books, userActiveBorrowings) {
     const container = document.getElementById('bookList');
+
     if (!books || books.length === 0) {
-        container.innerHTML = '<p class="empty-msg">Tidak ada buku tersedia dalam katalog.</p>';
+        container.innerHTML =
+            '<p class="empty-msg">Tidak ada buku tersedia dalam katalog.</p>';
         return;
     }
 
-    const userBookIds = userActiveBorrowings.map(b => b.bookId);
-    const maxReached  = userActiveBorrowings.length >= 3;
+    const userBookIds = userActiveBorrowings.map(
+        borrowing => borrowing.bookId
+    );
+
+    const maxReached = userActiveBorrowings.length >= 3;
 
     let html = '<div class="book-grid">';
 
     books.forEach(book => {
         const alreadyBorrowedByMe = userBookIds.includes(book.id);
 
-        let btnText  = '📥 Pinjam';
-        let btnClass = 'btn-success';
-        let btnAttr  = `onclick="borrowBook(${book.id})"`;
+        let buttonText = '📥 Pinjam';
+        let buttonClass = 'btn-success';
+        let buttonAttributes = `onclick="borrowBook(${book.id})"`;
 
         if (!book.available) {
-            btnText  = '🚫 Sedang Dipinjam';
-            btnClass = 'btn-disabled';
-            btnAttr  = 'disabled';
+            buttonText = '🚫 Sedang Dipinjam';
+            buttonClass = 'btn-disabled';
+            buttonAttributes = 'disabled';
         } else if (alreadyBorrowedByMe) {
-            btnText  = '📌 Sedang Anda Pinjam';
-            btnClass = 'btn-disabled';
-            btnAttr  = 'disabled';
+            buttonText = '📌 Sedang Anda Pinjam';
+            buttonClass = 'btn-disabled';
+            buttonAttributes = 'disabled';
         } else if (maxReached) {
-            btnText  = '🔒 Batas Tercapai';
-            btnClass = 'btn-disabled';
-            btnAttr  = 'disabled';
+            buttonText = '🔒 Batas Tercapai';
+            buttonClass = 'btn-disabled';
+            buttonAttributes = 'disabled';
         }
 
         html += `
@@ -261,7 +357,9 @@ function renderBooks(books, userActiveBorrowings) {
                 ${book.available ? '✅ Tersedia' : '❌ Sedang Dipinjam'}
               </span>
             </div>
-            <button class="btn ${btnClass}" ${btnAttr}>${btnText}</button>
+            <button class="btn ${buttonClass}" ${buttonAttributes}>
+                ${buttonText}
+            </button>
           </div>`;
     });
 
@@ -269,9 +367,11 @@ function renderBooks(books, userActiveBorrowings) {
     container.innerHTML = html;
 }
 
-// ─── LOGIKA PEMINJAMAN (INTER-SERVICE CALL VIA BORROWING SERVICE) ────
+// ─── PEMINJAMAN BUKU ─────────────────────────────────────────
+
 async function borrowBook(bookId) {
     const session = getSession();
+
     if (!session) {
         alert('Sesi habis. Silakan login kembali.');
         showLoginPage();
@@ -279,95 +379,108 @@ async function borrowBook(bookId) {
     }
 
     try {
-        // Request ke Borrowing Service (Port 5002)
-        // Borrowing Service akan otomatis memanggil Book Service (Port 5001)
-        const response = await fetch(`${BORROW_SERVICE_URL}/api/borrowings`, {
+        const response = await fetch('/api/borrowings', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: authHeaders(),
             body: JSON.stringify({
                 nim: session.nim,
-                bookId: bookId
+                bookId
             })
         });
 
         const data = await response.json();
 
-        if (!response.ok) {
-            alert(`❌ Peminjaman Ditolak:\n${data.error}`);
-            renderAll();
+        if (response.status === 401 || response.status === 403) {
+            handleExpiredSession();
             return;
         }
 
-        alert(`✅ Peminjaman Berhasil!\n\n${data.message}\nBatas pengembalian: ${formatDate(new Date(data.borrowing.dueDate))}`);
-        renderAll();
+        if (!response.ok) {
+            alert(`❌ Peminjaman ditolak:\n${data.error || data.message}`);
+            await renderAll();
+            return;
+        }
 
-    } catch (err) {
-        console.error('Borrow error:', err);
-        alert('⚠️ Gagal terhubung ke Borrowing Service (Port 5002). Pastikan backend aktif!');
+        alert(
+            `✅ Peminjaman berhasil!\n\n${data.message}\nBatas pengembalian: ${formatDate(new Date(data.borrowing.dueDate))}`
+        );
+
+        await renderAll();
+
+    } catch (error) {
+        console.error('Borrow error:', error);
+        alert('⚠️ Gagal menghubungi backend. Periksa apakah server aktif.');
     }
 }
 
-// ─── LOGIKA PENGEMBALIAN BUKU (INTER-SERVICE CALL) ───────────
+// ─── PENGEMBALIAN BUKU ───────────────────────────────────────
+
 async function returnBook(borrowingId, bookId) {
     if (!confirm('Apakah Anda yakin ingin mengembalikan buku ini?')) {
         return;
     }
 
     try {
-        const response = await fetch(`${BORROW_SERVICE_URL}/api/borrowings/return`, {
+        const response = await fetch('/api/borrowings/return', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: authHeaders(),
             body: JSON.stringify({
-                borrowingId: borrowingId,
-                bookId: bookId
+                borrowingId,
+                bookId
             })
         });
 
         const data = await response.json();
 
+        if (response.status === 401 || response.status === 403) {
+            handleExpiredSession();
+            return;
+        }
+
         if (!response.ok) {
-            alert(`❌ Gagal Mengembalikan:\n${data.error}`);
-            renderAll();
+            alert(`❌ Gagal mengembalikan:\n${data.error || data.message}`);
+            await renderAll();
             return;
         }
 
         alert(`✅ ${data.message}`);
-        renderAll();
+        await renderAll();
 
-    } catch (err) {
-        console.error('Return error:', err);
-        alert('⚠️ Gagal terhubung ke Borrowing Service (Port 5002). Pastikan backend aktif!');
+    } catch (error) {
+        console.error('Return error:', error);
+        alert('⚠️ Gagal menghubungi backend. Periksa apakah server aktif.');
     }
 }
 
 // ─── HELPER ──────────────────────────────────────────────────
+
 function formatDate(date) {
     return date.toLocaleDateString('id-ID', {
-        day:   '2-digit',
+        day: '2-digit',
         month: 'long',
-        year:  'numeric'
+        year: 'numeric'
     });
 }
 
-// ─── INIT ─────────────────────────────────────────────────────
+// ─── INISIALISASI ────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', function () {
     const session = getSession();
+
     if (session) {
         showMainPage(session);
     } else {
         showLoginPage();
     }
 
-    // Enter key support untuk login form
     ['nim', 'password'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('keydown', e => {
-                if (e.key === 'Enter') login();
+        const element = document.getElementById(id);
+
+        if (element) {
+            element.addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    login();
+                }
             });
         }
     });

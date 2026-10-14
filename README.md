@@ -24,8 +24,8 @@ npm start
 *(Atau pada Windows: cukup **klik 2x file `start.bat`**)*
 
 Satu perintah di atas otomatis menjalankan:
-1. 📚 **Book Service** di `http://localhost:5001`
-2. 📋 **Borrowing Service** di `http://localhost:5002`
+1. 📚 **Book Service** di ``
+2. 📋 **Borrowing Service** di ``
 3. 🌐 **Frontend Web Client** di `http://localhost:3000`
 
 ---

@@ -8,12 +8,12 @@
   "variable": [
     {
       "key": "bookServiceUrl",
-      "value": "http://localhost:5001",
+      "value": "",
       "type": "string"
     },
     {
       "key": "borrowServiceUrl",
-      "value": "http://localhost:5002",
+      "value": "",
       "type": "string"
     },
     {

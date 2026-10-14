@@ -101,13 +101,13 @@ localStorage
 Setelah migrasi, frontend meminta data kepada backend menggunakan:
 
 ```javascript
-fetch('http://localhost:5001/api/books')
+fetch('')
 ```
 
 Untuk peminjaman, frontend dapat berkomunikasi dengan:
 
 ```javascript
-fetch('http://localhost:5002/api/borrowings', {
+fetch('', {
   method: 'POST'
 })
 ```
@@ -126,8 +126,8 @@ Dengan demikian, frontend tidak lagi menyimpan seluruh logika transaksi sendiri.
 
 Implementation Plan berfungsi sebagai rencana kerja sebelum atau selama proses implementasi. Pada screenshot terlihat pembagian sistem menjadi:
 
-1. **Book Service** pada `http://localhost:5001`;
-2. **Borrowing Service** pada `http://localhost:5002`;
+1. **Book Service** pada ``;
+2. **Borrowing Service** pada ``;
 3. **Frontend Web Client**.
 
 AI juga mencantumkan aturan bisnis yang penting, yaitu:
@@ -299,7 +299,7 @@ Frontend yang sebelumnya menggunakan `localStorage` diarahkan untuk mengambil da
 Contoh sederhana:
 
 ```javascript
-const response = await fetch('http://localhost:5001/api/books');
+const response = await fetch('');
 const books = await response.json();
 ```
 
@@ -350,7 +350,7 @@ Kode harus:
 Contohnya, AI dapat membuat pemanggilan API seperti berikut:
 
 ```javascript
-await fetch('http://localhost:5001/api/books/1');
+await fetch('');
 ```
 
 Tetapi jika Book Service sedang mati, kode tersebut dapat mengalami error. Karena itu diperlukan penanganan error menggunakan `try-catch`.

@@ -140,7 +140,7 @@ sequenceDiagram
 
 ## 3. Kontrak Endpoint REST API
 
-### 📚 A. Book Service (`http://localhost:5001`)
+### 📚 A. Book Service (``)
 
 | Method | Endpoint | Fungsi | Parameter / Body | Response Code |
 |---|---|---|---|---|
@@ -152,7 +152,7 @@ sequenceDiagram
 
 ---
 
-### 📋 B. Borrowing Service (`http://localhost:5002`)
+### 📋 B. Borrowing Service (``)
 
 | Method | Endpoint | Fungsi | Parameter / Body | Response Code |
 |---|---|---|---|---|
