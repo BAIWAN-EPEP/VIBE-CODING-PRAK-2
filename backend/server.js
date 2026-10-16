@@ -550,13 +550,7 @@ app.post('/api/borrowings/reset', async (req, res) => {
     }
 });
 
-const STUDENTS = [
-    { nim: '12345', name: 'Ahmad Fauzi', password: 'pass123' },
-    { nim: '67890', name: 'Siti Rahayu', password: 'pass456' },
-    { nim: '11111', name: 'Budi Santoso', password: 'pass789' }
-];
-
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { nim, password } = req.body;
 
     if (!nim || !password) {
@@ -565,33 +559,43 @@ app.post('/api/login', (req, res) => {
         });
     }
 
-    const student = STUDENTS.find(
-        s => s.nim === nim && s.password === password
-    );
+    try {
+        const [rows] = await db.query(
+            'SELECT nim, name, password FROM users WHERE nim = ?',
+            [nim]
+        );
 
-    if (!student) {
-        return res.status(401).json({
-            message: 'NIM atau password salah.'
+        if (rows.length === 0 || rows[0].password !== password) {
+            return res.status(401).json({
+                message: 'NIM atau password salah.'
+            });
+        }
+
+        const student = rows[0];
+
+        const token = jwt.sign(
+            {
+                nim: student.nim,
+                name: student.name
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        return res.json({
+            message: 'Login berhasil.',
+            token,
+            user: {
+                nim: student.nim,
+                name: student.name
+            }
+        });
+    } catch (error) {
+        console.error('Gagal login:', error);
+        return res.status(500).json({
+            message: 'Terjadi kesalahan pada server.'
         });
     }
-
-    const token = jwt.sign(
-        {
-            nim: student.nim,
-            name: student.name
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-    );
-
-    return res.json({
-        message: 'Login berhasil.',
-        token,
-        user: {
-            nim: student.nim,
-            name: student.name
-        }
-    });
 });
 
 // ============================================================
@@ -610,8 +614,7 @@ async function startServer() {
             console.log(`Borrowing API: http://localhost:${PORT}/api/borrowings`);
         });
     } catch (error) {
-        console.error('Server gagal dijalankan:', error.message);
-        process.exit(1);
+        console.error('Server gagal dijalankan:', error);
     }
 }
 
