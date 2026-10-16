@@ -261,7 +261,7 @@ POST /api/borrowings/return
 Contohnya, ketika frontend meminta katalog:
 
 ```text
-GET http://localhost:5001/api/books
+GET 
 ```
 
 Book Service mengembalikan data buku.
@@ -369,8 +369,8 @@ Contohnya:
 
 ```text
 Frontend       : http://localhost:3000
-Book Service   : http://localhost:5001
-Borrowing      : http://localhost:5002
+Book Service   : 
+Borrowing      : 
 ```
 
 Browser menganggap ketiganya memiliki origin yang berbeda. Jika backend belum mengizinkan request dari frontend, request dapat diblokir oleh kebijakan CORS.

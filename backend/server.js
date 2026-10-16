@@ -1,4 +1,12 @@
-require('dotenv').config();
+require('dotenv').config({
+    path: require('path').resolve(__dirname, '../.env')
+});
+
+console.log(
+    'JWT_SECRET terbaca:',
+    Boolean(process.env.JWT_SECRET)
+);
+
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const cors = require('cors');
