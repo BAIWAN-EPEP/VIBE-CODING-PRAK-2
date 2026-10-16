@@ -1,43 +1,39 @@
-API Contract — Sistem Peminjaman Buku Perpustakaan
+API Contract — Library Management API
 
-1. Informasi Umum
+1. Base URL
 
-Informasi| Keterangan
-Nama sistem| Sistem Peminjaman Buku Perpustakaan
-Backend| Node.js dan Express.js
-Database| MySQL
-Format data| JSON
-Autentikasi| JSON Web Token (JWT)
-Base URL| "http://localhost:3000"
+Base URL untuk pengujian lokal:
 
-API digunakan untuk memeriksa status server, melakukan login mahasiswa, mengelola katalog buku, melakukan peminjaman, mengembalikan buku, dan mengelola riwayat peminjaman.
+http://localhost:3000
+
+Seluruh data buku, pengguna yang melakukan login, dan transaksi peminjaman dikelola melalui backend service.
 
 2. Daftar Endpoint
 
-No.| Method| Endpoint| Fungsi
+No.| Method| Endpoint| Tujuan
 1| GET| "/health"| Memeriksa status server
-2| GET| "/api/books"| Mengambil daftar buku dan mencari buku berdasarkan judul atau penulis
-3| GET| "/api/books/:id"| Mengambil detail buku berdasarkan ID
-4| PATCH| "/api/books/:id/status"| Memperbarui status ketersediaan buku
-5| POST| "/api/books/reset"| Mereset status seluruh buku jika tidak ada peminjaman aktif
-6| GET| "/api/borrowings"| Mengambil seluruh riwayat peminjaman
-7| GET| "/api/borrowings/:nim"| Mengambil riwayat peminjaman berdasarkan NIM
+2| GET| "/api/books"| Menampilkan daftar buku
+3| GET| "/api/books/:id"| Menampilkan detail buku berdasarkan ID
+4| PATCH| "/api/books/:id/status"| Mengubah status ketersediaan buku
+5| POST| "/api/books/reset"| Mengatur ulang status seluruh buku jika tidak ada peminjaman aktif
+6| GET| "/api/borrowings"| Menampilkan seluruh riwayat peminjaman
+7| GET| "/api/borrowings/:nim"| Menampilkan riwayat peminjaman berdasarkan NIM
 8| POST| "/api/borrowings"| Membuat transaksi peminjaman buku
 9| POST| "/api/borrowings/return"| Memproses pengembalian buku
 10| POST| "/api/borrowings/reset"| Menghapus riwayat peminjaman yang sudah dikembalikan
-11| POST| "/api/login"| Memverifikasi akun mahasiswa dan menghasilkan token JWT
+11| POST| "/api/login"| Melakukan login dan menghasilkan JWT
 
-3. Detail Request dan Response
+3. Detail Endpoint
 
-3.1 Pemeriksaan Server
+3.1 GET "/health"
 
-Method: "GET"
+Tujuan: Memeriksa apakah server berjalan.
 
-Endpoint: "/health"
+Header: Tidak ada header khusus.
 
 Request body: Tidak diperlukan.
 
-Contoh response "200 OK":
+Contoh response berhasil (200 OK):
 
 {
   "service": "library-management-api",
@@ -45,51 +41,28 @@ Contoh response "200 OK":
   "port": 3000
 }
 
-3.2 Login Mahasiswa
+Validasi/business rule: Endpoint mengembalikan status server dan port yang digunakan.
 
-Method: "POST"
+Kasus gagal: Jika server tidak berjalan, permintaan tidak dapat terhubung.
 
-Endpoint: "/api/login"
+3.2 GET "/api/books"
 
-Request body:
+Tujuan: Menampilkan daftar buku yang tersedia dalam database.
 
-{
-  "nim": "67890",
-  "password": "pass456"
-}
+Query parameter:
 
-Contoh response berhasil "200 OK":
+Parameter| Keterangan
+"search"| Opsional, mencari buku berdasarkan judul atau penulis
 
-{
-  "message": "Login berhasil.",
-  "token": "<JWT_TOKEN>",
-  "user": {
-    "nim": "67890",
-    "name": "Siti Rahayu"
-  }
-}
-
-Response gagal:
-
-- "400 Bad Request": NIM atau password tidak diisi.
-- "401 Unauthorized": NIM atau password salah.
-- "500 Internal Server Error": Terjadi kesalahan saat membuat token atau memproses request.
-
-Catatan: kredensial di atas merupakan contoh akun yang tercantum pada kode "server.js".
-
-3.3 Mengambil Daftar Buku
-
-Method: "GET"
-
-Endpoint: "/api/books"
+Header: Tidak ada header khusus.
 
 Request body: Tidak diperlukan.
 
-Untuk mencari buku berdasarkan judul atau penulis, gunakan query parameter:
+Contoh request:
 
-"GET /api/books?search=algoritma"
+GET /api/books?search=algoritma
 
-Contoh response "200 OK":
+Contoh response berhasil (200 OK):
 
 [
   {
@@ -101,235 +74,359 @@ Contoh response "200 OK":
   }
 ]
 
-Contoh data di atas hanya ilustrasi format respons; data aktual berasal dari database.
+Validasi/business rule: Parameter "search" digunakan untuk menyaring judul atau penulis. Nilai "available" menunjukkan ketersediaan buku.
 
-3.4 Mengambil Detail Buku
+Kasus gagal: Jika terjadi kesalahan database, server dapat mengembalikan status 500.
 
-Method: "GET"
+3.3 GET "/api/books/:id"
 
-Endpoint: "/api/books/:id"
+Tujuan: Menampilkan detail satu buku berdasarkan ID.
+
+Path parameter:
+
+Parameter| Keterangan
+"id"| ID buku berupa bilangan bulat positif
+
+Header: Tidak ada header khusus.
+
+Request body: Tidak diperlukan.
 
 Contoh request:
 
-"GET /api/books/1"
+GET /api/books/1
 
-Parameter:
+Contoh response berhasil (200 OK):
 
-- "id": ID buku berupa bilangan bulat positif.
+{
+  "id": 1,
+  "title": "Algoritma dan Pemrograman",
+  "author": "Contoh Penulis",
+  "available": true,
+  "borrowedBy": null
+}
 
-Kemungkinan response:
+Validasi/business rule:
 
-- "200 OK": Detail buku ditemukan.
+- ID harus berupa bilangan bulat positif.
+- Buku harus ditemukan di database.
+
+Kasus gagal:
+
 - "400 Bad Request": ID tidak valid.
 - "404 Not Found": Buku tidak ditemukan.
-- "500 Internal Server Error": Terjadi kesalahan database.
+- "500 Internal Server Error": Terjadi kesalahan server/database.
 
-3.5 Memperbarui Status Buku
+3.4 PATCH "/api/books/:id/status"
 
-Method: "PATCH"
+Tujuan: Mengubah status ketersediaan buku.
 
-Endpoint: "/api/books/:id/status"
+Path parameter: "id", yaitu ID buku.
 
-Contoh request:
+Header:
+
+Content-Type: application/json
+
+Request body:
 
 {
   "available": false,
-  "borrowedBy": "67890"
+  "borrowedBy": "12345"
 }
 
-Keterangan:
-
-- "available": "true" jika buku tersedia dan "false" jika dipinjam.
-- "borrowedBy": NIM peminjam, wajib berupa string yang tidak kosong ketika "available" bernilai "false".
-
-Kemungkinan response:
-
-- "200 OK": Status buku berhasil diperbarui.
-- "400 Bad Request": ID atau data status tidak valid.
-- "404 Not Found": Buku tidak ditemukan.
-- "500 Internal Server Error": Gagal memperbarui data.
-
-3.6 Mereset Status Buku
-
-Method: "POST"
-
-Endpoint: "/api/books/reset"
-
-Request body: Tidak diperlukan.
-
-Fungsi: Mengubah seluruh buku menjadi tersedia dan mengosongkan "borrowed_by", tetapi hanya jika tidak ada peminjaman aktif.
-
-Kemungkinan response:
-
-- "200 OK": Status seluruh buku berhasil direset.
-- "409 Conflict": Reset ditolak karena masih ada peminjaman aktif.
-- "500 Internal Server Error": Terjadi kesalahan database.
-
-3.7 Mengambil Seluruh Riwayat Peminjaman
-
-Method: "GET"
-
-Endpoint: "/api/borrowings"
-
-Request body: Tidak diperlukan.
-
-Response "200 OK" berupa array riwayat peminjaman, dengan atribut:
-
-- "id"
-- "nim"
-- "bookId"
-- "bookTitle"
-- "borrowDate"
-- "dueDate"
-- "status"
-- "returnDate"
-
-Jika terjadi kesalahan database, server mengembalikan "500 Internal Server Error".
-
-3.8 Mengambil Riwayat Berdasarkan NIM
-
-Method: "GET"
-
-Endpoint: "/api/borrowings/:nim"
-
-Contoh request:
-
-"GET /api/borrowings/67890"
-
-Parameter:
-
-- "nim": NIM mahasiswa yang riwayatnya akan dicari.
-
-Response "200 OK" berupa array riwayat peminjaman mahasiswa tersebut.
-
-Jika terjadi kesalahan database, server mengembalikan "500 Internal Server Error".
-
-3.9 Meminjam Buku
-
-Method: "POST"
-
-Endpoint: "/api/borrowings"
-
-Request body:
+Contoh response berhasil (200 OK):
 
 {
-  "nim": "67890",
-  "bookId": 1
-}
-
-Ketentuan:
-
-1. NIM harus diisi.
-2. ID buku harus berupa bilangan bulat positif.
-3. Buku harus tersedia.
-4. Maksimal tiga peminjaman aktif per mahasiswa.
-5. Buku yang sama tidak boleh dipinjam kembali oleh mahasiswa yang sama selama transaksi sebelumnya masih aktif.
-6. Tanggal jatuh tempo ditetapkan tujuh hari setelah peminjaman.
-
-Contoh response berhasil "201 Created":
-
-{
-  "message": "Berhasil meminjam buku \"Algoritma dan Pemrograman\".",
-  "borrowing": {
-    "id": "<ID_PEMINJAMAN>",
-    "nim": "67890",
-    "bookId": 1,
-    "bookTitle": "Algoritma dan Pemrograman",
-    "borrowDate": "<TANGGAL_PINJAM>",
-    "dueDate": "<TANGGAL_JATUH_TEMPO>",
-    "status": "active",
-    "returnDate": null
+  "message": "Status buku berhasil diperbarui",
+  "book": {
+    "id": 1,
+    "available": false,
+    "borrowedBy": "12345"
   }
 }
 
-Kemungkinan response gagal:
+Validasi/business rule:
 
-- "400 Bad Request": Data tidak valid, buku sedang dipinjam, atau batas maksimal tercapai.
+- "available" harus berupa boolean.
+- Jika "available" bernilai "false", "borrowedBy" harus diisi dengan nilai yang tidak kosong.
+- ID buku harus ditemukan.
+
+Kasus gagal:
+
+- "400 Bad Request": Data tidak valid.
 - "404 Not Found": Buku tidak ditemukan.
-- "500 Internal Server Error": Gagal memproses transaksi.
+- "500 Internal Server Error": Terjadi kesalahan server/database.
 
-3.10 Mengembalikan Buku
+3.5 POST "/api/books/reset"
 
-Method: "POST"
+Tujuan: Mengatur semua buku menjadi tersedia kembali.
 
-Endpoint: "/api/borrowings/return"
+Header:
+
+Content-Type: application/json
+
+Request body: Tidak diperlukan.
+
+Contoh response berhasil (200 OK):
+
+{
+  "message": "Status semua buku berhasil direset"
+}
+
+Validasi/business rule:
+
+- Proses reset hanya dapat dilakukan jika tidak ada transaksi peminjaman berstatus "active".
+- Jika terdapat peminjaman aktif, proses ditolak.
+
+Kasus gagal:
+
+- "409 Conflict": Masih terdapat peminjaman aktif.
+- "500 Internal Server Error": Terjadi kesalahan server/database.
+
+3.6 GET "/api/borrowings"
+
+Tujuan: Menampilkan seluruh riwayat transaksi peminjaman.
+
+Header: Tidak ada header khusus.
+
+Request body: Tidak diperlukan.
+
+Contoh response berhasil (200 OK):
+
+[
+  {
+    "id": 1,
+    "nim": "12345",
+    "bookId": 1,
+    "title": "Algoritma dan Pemrograman",
+    "borrowDate": "2026-10-16",
+    "dueDate": "2026-10-23",
+    "status": "active",
+    "returnDate": null
+  }
+]
+
+Validasi/business rule: Data diambil dari transaksi peminjaman dan informasi buku yang terkait.
+
+Kasus gagal: "500 Internal Server Error" jika terjadi kesalahan database.
+
+3.7 GET "/api/borrowings/:nim"
+
+Tujuan: Menampilkan riwayat peminjaman berdasarkan NIM.
+
+Path parameter:
+
+Parameter| Keterangan
+"nim"| Nomor induk mahasiswa
+
+Header: Tidak ada header khusus.
+
+Request body: Tidak diperlukan.
+
+Contoh request:
+
+GET /api/borrowings/12345
+
+Contoh response berhasil (200 OK):
+
+[
+  {
+    "id": 1,
+    "nim": "12345",
+    "bookId": 1,
+    "status": "returned"
+  }
+]
+
+Validasi/business rule: Data riwayat difilter berdasarkan NIM yang diberikan.
+
+Kasus gagal: "500 Internal Server Error" jika terjadi kesalahan database.
+
+Catatan keamanan: Pada implementasi saat ini, endpoint belum memeriksa apakah peminta berhak melihat riwayat NIM tersebut.
+
+3.8 POST "/api/borrowings"
+
+Tujuan: Membuat transaksi peminjaman buku.
+
+Header:
+
+Content-Type: application/json
 
 Request body:
 
 {
-  "borrowingId": "<ID_PEMINJAMAN>"
+  "nim": "12345",
+  "bookId": 1
 }
 
-Ketentuan:
+Contoh response berhasil (201 Created):
+
+{
+  "message": "Peminjaman berhasil",
+  "borrowing": {
+    "id": 1,
+    "nim": "12345",
+    "bookId": 1,
+    "status": "active"
+  }
+}
+
+Validasi/business rule:
+
+- NIM dan ID buku wajib diisi dengan format yang valid.
+- Buku harus tersedia.
+- Satu mahasiswa maksimal memiliki tiga peminjaman aktif.
+- Mahasiswa tidak boleh meminjam buku yang sama jika peminjaman sebelumnya masih aktif.
+- Tanggal jatuh tempo ditetapkan tujuh hari setelah tanggal peminjaman.
+- Transaksi menggunakan mekanisme database transaction dan penguncian data buku untuk membantu mencegah peminjaman bersamaan.
+
+Kasus gagal:
+
+- "400 Bad Request": Data tidak valid, buku tidak tersedia, batas peminjaman tercapai, atau buku yang sama masih dipinjam.
+- "404 Not Found": Buku tidak ditemukan.
+- "500 Internal Server Error": Terjadi kesalahan server/database.
+
+3.9 POST "/api/borrowings/return"
+
+Tujuan: Memproses pengembalian buku yang sedang dipinjam.
+
+Header:
+
+Content-Type: application/json
+
+Request body:
+
+{
+  "borrowingId": 1
+}
+
+Contoh response berhasil (200 OK):
+
+{
+  "message": "Buku berhasil dikembalikan",
+  "borrowing": {
+    "id": 1,
+    "status": "returned"
+  }
+}
+
+Validasi/business rule:
 
 - "borrowingId" wajib diisi.
 - Transaksi harus ditemukan dan berstatus "active".
+- Status peminjaman diubah menjadi "returned".
+- Tanggal pengembalian dicatat.
+- Buku diatur kembali menjadi tersedia dan "borrowed_by" dikosongkan.
 
-Response berhasil "200 OK" berisi pesan pengembalian dan data peminjaman yang sudah diperbarui.
+Kasus gagal:
 
-Kemungkinan response gagal:
+- "400 Bad Request": ID transaksi tidak diisi.
+- "404 Not Found": Transaksi tidak ditemukan atau sudah tidak berstatus aktif.
+- "500 Internal Server Error": Terjadi kesalahan server/database.
 
-- "400 Bad Request": ID peminjaman tidak diisi.
-- "404 Not Found": Peminjaman aktif tidak ditemukan atau buku sudah dikembalikan.
-- "500 Internal Server Error": Terjadi kesalahan saat memproses pengembalian.
+3.10 POST "/api/borrowings/reset"
 
-3.11 Mereset Riwayat Peminjaman
+Tujuan: Menghapus transaksi peminjaman yang sudah dikembalikan.
 
-Method: "POST"
+Header:
 
-Endpoint: "/api/borrowings/reset"
+Content-Type: application/json
 
 Request body: Tidak diperlukan.
 
-Fungsi: Menghapus riwayat peminjaman yang statusnya "returned".
-
-Contoh response "200 OK":
+Contoh response berhasil (200 OK):
 
 {
-  "message": "Riwayat peminjaman yang sudah selesai berhasil dihapus.",
-  "deletedRows": 1
+  "message": "Riwayat peminjaman berhasil direset",
+  "deletedRows": 2
 }
 
-Jika terjadi kesalahan database, server mengembalikan "500 Internal Server Error".
+Validasi/business rule: Hanya transaksi dengan status "returned" yang dihapus. Transaksi aktif tidak termasuk dalam penghapusan.
 
-4. Aturan Bisnis
+Kasus gagal: "500 Internal Server Error" jika terjadi kesalahan database.
 
-1. Maksimal tiga buku dengan status "active" untuk setiap mahasiswa.
-2. Buku yang sedang dipinjam tidak dapat dipinjam kembali.
-3. Masa peminjaman adalah tujuh hari.
-4. Pengembalian mengubah status peminjaman menjadi "returned".
-5. Pengembalian membuat buku kembali tersedia.
-6. Reset status seluruh buku ditolak jika masih terdapat peminjaman aktif.
-7. Reset riwayat hanya menghapus transaksi dengan status "returned".
+3.11 POST "/api/login"
 
-5. Catatan Autentikasi dan Keamanan
+Tujuan: Memverifikasi login pengguna dan menghasilkan token JWT.
 
-Endpoint "/api/login" menghasilkan token JWT dengan masa berlaku satu jam.
+Header:
 
-Frontend yang menggunakan token mengirimkannya melalui header:
+Content-Type: application/json
 
-"Authorization: Bearer <JWT_TOKEN>"
+Request body:
 
-Catatan penting: Pada implementasi "server.js" yang diperiksa, middleware untuk memverifikasi token JWT belum terlihat diterapkan pada endpoint lainnya. Karena itu, header tersebut belum membuktikan bahwa endpoint sudah terlindungi. Verifikasi autentikasi dan otorisasi perlu diperiksa serta disesuaikan dengan kebutuhan sistem.
+{
+  "nim": "12345",
+  "password": "pass123"
+}
 
-6. Pengujian API
+Contoh response berhasil (200 OK):
 
-Pengujian dilakukan menggunakan Postman dan dapat diotomatisasi menggunakan Newman.
+{
+  "message": "Login berhasil",
+  "token": "<JWT_TOKEN>",
+  "user": {
+    "nim": "12345",
+    "name": "Ahmad Fauzi"
+  }
+}
 
-Endpoint yang perlu diuji:
+Validasi/business rule:
 
-1. Pemeriksaan status server.
-2. Login dengan akun benar dan salah.
-3. Pengambilan daftar dan detail buku.
-4. Pembaruan status buku.
-5. Peminjaman buku yang tersedia.
-6. Penolakan peminjaman buku yang tidak tersedia.
-7. Pembatasan maksimal tiga buku aktif.
-8. Pengembalian buku.
-9. Reset status dan riwayat peminjaman.
+- NIM dan password wajib diisi.
+- Kredensial harus sesuai dengan data pengguna yang tersedia pada kode.
+- Token JWT berlaku selama satu jam.
+- Nilai rahasia penandatangan token menggunakan konfigurasi "JWT_SECRET".
 
-Hasil pengujian harus dicatat berdasarkan respons aktual dari server, termasuk status HTTP dan isi respons.
+Kasus gagal:
 
-7. Catatan Versi
+- "400 Bad Request": NIM atau password tidak diisi.
+- "401 Unauthorized": Kredensial tidak valid.
 
-Dokumentasi ini disusun berdasarkan kode "backend/server.js" yang diperiksa. Dokumentasi perlu diperbarui jika endpoint, aturan bisnis, atau format request dan response berubah.
+Catatan keamanan: Data pengguna dan password pada implementasi saat ini masih ditulis langsung di kode. Untuk penggunaan nyata, sebaiknya gunakan database dan penyimpanan password berbentuk hash.
+
+4. Header yang Digunakan
+
+Header| Kegunaan
+"Content-Type: application/json"| Digunakan ketika mengirim request body JSON
+"Authorization: Bearer <token>"| Format header untuk token JWT jika autentikasi diterapkan
+
+Catatan: Berdasarkan kode backend yang diperiksa, token dibuat saat login, tetapi middleware verifikasi JWT belum diterapkan pada endpoint lainnya. Karena itu, jangan menganggap endpoint tersebut sudah terlindungi token.
+
+5. Ringkasan HTTP Status Code
+
+Status| Arti
+"200 OK"| Permintaan berhasil
+"201 Created"| Transaksi peminjaman berhasil dibuat
+"400 Bad Request"| Parameter atau data permintaan tidak valid
+"401 Unauthorized"| Kredensial login tidak valid
+"404 Not Found"| Data yang diminta tidak ditemukan
+"409 Conflict"| Operasi reset buku ditolak karena masih ada peminjaman aktif
+"500 Internal Server Error"| Terjadi kesalahan server atau database
+
+6. Business Rule Utama
+
+1. Buku yang dipinjam harus berstatus tersedia.
+2. Mahasiswa maksimal memiliki tiga peminjaman aktif.
+3. Mahasiswa tidak boleh meminjam buku yang sama dua kali ketika transaksi sebelumnya masih aktif.
+4. Masa peminjaman adalah tujuh hari sejak tanggal peminjaman.
+5. Buku menjadi tersedia kembali setelah transaksi pengembalian berhasil.
+6. Reset status buku ditolak jika masih terdapat peminjaman aktif.
+7. Reset riwayat peminjaman hanya menghapus transaksi berstatus "returned".
+
+7. Contoh Kasus Pengujian
+
+Kasus| Request| Hasil yang Diharapkan
+Berhasil melihat daftar buku| "GET /api/books"| "200 OK"
+Berhasil melihat detail buku| "GET /api/books/1"| "200 OK" jika buku ditemukan
+ID buku tidak valid| "GET /api/books/abc"| "400 Bad Request"
+Buku tidak ditemukan| "GET /api/books/99999"| "404 Not Found"
+Berhasil meminjam buku tersedia| "POST /api/borrowings" dengan NIM dan ID buku valid| "201 Created"
+Meminjam buku yang tidak tersedia| "POST /api/borrowings"| "400 Bad Request"
+Meminjam buku yang sama saat masih aktif| "POST /api/borrowings"| "400 Bad Request"
+Batas tiga peminjaman aktif tercapai| "POST /api/borrowings"| "400 Bad Request"
+Berhasil mengembalikan buku| "POST /api/borrowings/return" dengan ID transaksi aktif| "200 OK"
+Mengembalikan transaksi yang tidak aktif| "POST /api/borrowings/return"| "404 Not Found"
+Reset buku saat ada peminjaman aktif| "POST /api/books/reset"| "409 Conflict"
+Login dengan kredensial tidak valid| "POST /api/login"| "401 Unauthorized"
+
+Catatan: Contoh response pada dokumen ini merupakan ilustrasi kontrak berdasarkan implementasi backend. Lakukan pengujian melalui Postman untuk memastikan bentuk response, status code, dan business rule sesuai dengan hasil aktual.
